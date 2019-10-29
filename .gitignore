@@ -80,6 +80,6 @@ Makefile
 .vscode/
 
 # Ignore image files
-.jpg
-.jpeg
-.png
+*.jpg
+*.jpeg
+*.png
