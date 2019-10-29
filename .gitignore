@@ -1,0 +1,80 @@
+# Not ignore source code
+!*.c
+!*.cpp
+
+# For C:
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel module compiler results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+# For C++ (except duplicate formats of C):
+
+# Compiled object files
+*.slo
+*.lo
+
+# Fortran module files
+*.smod
+
+# Compiled static libraries
+*.lai
+*.la
+
+# Executables
+*.app
+
+# Ignore Makefile
+Makefile
+
+# Ignore vscode configurations
+.vscode/
