@@ -78,3 +78,8 @@ Makefile
 
 # Ignore vscode configurations
 .vscode/
+
+# Ignore image files
+.jpg
+.jpeg
+.png
