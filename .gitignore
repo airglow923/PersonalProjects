@@ -73,9 +73,6 @@ dkms.conf
 # Executables
 *.app
 
-# Ignore Makefile
-Makefile
-
 # Ignore vscode configurations
 .vscode/
 
