@@ -12,7 +12,7 @@ int main()
     fp = fopen("400.jpg", "w");
     if (fp == NULL)
       std::cout << "File cannot be found.\n";
-    curl_easy_setopt(image, CURLOPT_USERAGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
+    curl_easy_setopt(image, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(image, CURLOPT_WRITEFUNCTION, NULL);
     curl_easy_setopt(image, CURLOPT_WRITEDATA, fp);
     curl_easy_setopt(image, CURLOPT_URL, url);
