@@ -1,19 +1,19 @@
 CXX:=g++
-GCC_VERSION=9.2.0
-CXX:=$(CXX)-$(GCC_VERSION)
+# GCC_VERSION=9.2.0
+# CXX:=$(CXX)-$(GCC_VERSION)
 CXXFLAGS=-std=c++17 -O3 -Wall
-CPPFLAGS=-I/usr/local/include/ImageMagick-7 -L/usr/local/lib
-LINKER=-lpthread -lcurl -lMagick++
-LDMAGICK=-DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=1
+LINKER=-lpthread -lcurl -lstdc++fs
+CPPMAGICK=`Magick++-config --cppflags --cxxflags`
+LDMAGICK=`Magick++-config --ldflags --libs`
 
 main: Photomosaics.o main.o
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o main main.o Photomosaics.o $(LINKER)
+	$(CXX) $(CXXFLAGS) $(CPPMAGICK) main.o Photomosaics.o -o main $(LINKER) $(LDMAGICK)
 
 main.o: main.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c main.cpp $(LDMAGICK)
+	$(CXX) $(CXXFLAGS) $(CPPMAGICK) -c main.cpp $(LDMAGICK)
 
 Photomosaics.o: Photomosaics.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c Photomosaics.cpp $(LINKER) $(LDMAGICK)
+	$(CXX) $(CXXFLAGS) $(CPPMAGICK) -c Photomosaics.cpp $(LINKER) $(LDMAGICK)
 
 :PHONY: clean
 clean:

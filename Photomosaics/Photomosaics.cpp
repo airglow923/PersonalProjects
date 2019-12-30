@@ -1,12 +1,13 @@
 #include "Photomosaics.hpp"
 
+unsigned Photomosaics::src = 0;
+
 Photomosaics::Photomosaics(
   std::string filename_, unsigned width_, unsigned height_)
   : filename(filename_), img_no(0), width(width_), height(height_)
 {
-  adjust_src();
+  adjust_piece();
   create_src_dir();
-  
 }
 
 void Photomosaics::load_img(const std::string& s)
@@ -24,13 +25,63 @@ void Photomosaics::load_img(const std::string& s)
   width = (size_t) image.baseColumns();
   height = (size_t) image.baseRows();
   
-  adjust_src();
+  adjust_piece();
 }
 
-void Photomosaics::adjust_src()
+void Photomosaics::adjust_piece()
 {
-  src.width = width / SRC;
-  src.height = height / SRC;
+  piece.width = width / BLOCKS;
+  piece.height = height / BLOCKS;
+}
+
+struct RGB Photomosaics::calc_avg_color(const Magick::Image& image)
+{
+  const unsigned WIDTH = image.baseColumns();
+  const unsigned HEIGHT = image.baseRows();
+  
+  struct RGB avg_color;
+  unsigned total_pixels = WIDTH * HEIGHT;
+  unsigned total_R = 0;
+  unsigned total_G = 0;
+  unsigned total_B = 0;
+
+  for (size_t w = 0; w < WIDTH; w++) {
+    for (size_t h = 0; h < HEIGHT; h++) {
+      total_R += (uint8_t) round(image.pixelColor(w, h).redQuantum() / 256.0);
+      total_G += (uint8_t) round(image.pixelColor(w, h).greenQuantum() / 256.0);
+      total_R += (uint8_t) round(image.pixelColor(w, h).blueQuantum() / 256.0);
+    }
+  }
+
+  avg_color = {
+    total_R / total_pixels,
+    total_G / total_pixels,
+    total_B / total_pixels
+  };
+
+  return avg_color;
+}
+
+void Photomosaics::mosaicify()
+{
+  Magick::Image image;
+
+  try {
+    image.read(filename);
+  } catch (std::exception& e) {
+    std::cerr << e.what() << "\n";
+    return;
+  }
+
+  for (unsigned w = 0; w < width; w += piece.width) {
+    Magick::Image tmp(image);
+    std::vector<struct RGB> width_color_map;
+    for (unsigned h = 0; h < height; h += piece.height) {
+      tmp.crop(Magick::Geometry(piece.width, piece.height, w, h));
+      width_color_map.push_back(calc_avg_color(tmp));
+    }
+    color_map.push_back(width_color_map);
+  }
 }
 
 static size_t write_data(void* buffer, size_t size, size_t nmemb, void* userp)
@@ -57,7 +108,7 @@ void Photomosaics::download_sprt_src_img()
   std::mt19937 seed(dev());
   std::uniform_int_distribution<std::mt19937::result_type> range;
 
-  create_dir();
+  create_src_dir();
 
   CURLM* multi_handle = curl_multi_init();
   CURLMsg* msg;
@@ -67,10 +118,8 @@ void Photomosaics::download_sprt_src_img()
   int msgs_left = -1;
 
   for (int i = 0; i < SRC; i++) {
-    std::string url = "https://picsum.photos/seed/" + std::to_string(range(seed)) + "/" + std::to_string(src.width) + "/" + std::to_string(src.height);
-    std::cout << url << "\n";
-    files[i] = fopen((DIR + filename + "/" + std::to_string(img_no) + ".jpg").c_str(), "w");
-    img_no++;
+    std::string url = "https://picsum.photos/seed/" + std::to_string(range(seed)) + "/" + std::to_string(piece.width) + "/" + std::to_string(piece.height);
+    files[i] = fopen((DIR + filename + "/" + std::to_string(img_no++) + ".jpg").c_str(), "w");
     add_transfer(multi_handle, url, files[i]);
   }
 
@@ -104,7 +153,7 @@ void Photomosaics::create_src_dir()
   system(("bash check_dir.sh " + filename).c_str());
 }
 
-void Photomosaics::download_src_img()
+void Photomosaics::download_src_img(unsigned w, unsigned h)
 {
   // random variables
   std::random_device dev;
@@ -119,10 +168,9 @@ void Photomosaics::download_src_img()
   int msgs_left = -1;
 
   for (int i = 0; i < SRC; i++) {
-    std::string url = "https://picsum.photos/seed/" + std::to_string(range(seed)) + "/" + std::to_string(src.width) + "/" + std::to_string(src.height);
+    std::string url = "https://picsum.photos/seed/" + std::to_string(range(seed)) + "/" + std::to_string(w) + "/" + std::to_string(h);
     std::cout << url << "\n";
-    files[i] = fopen((DIR + std::to_string(src) + ".jpg").c_str(), "w");
-    src++;
+    files[i] = fopen((DIR + std::to_string(src++) + ".jpg").c_str(), "w");
     add_transfer(multi_handle, url, files[i]);
   }
 
