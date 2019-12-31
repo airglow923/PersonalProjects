@@ -2,8 +2,15 @@
 
 unsigned Photomosaics::src = 0;
 
+Photomosaics::Photomosaics(const std::string& filename_)
+{
+  load_img(filename_);
+  adjust_piece();
+  create_src_dir();
+}
+
 Photomosaics::Photomosaics(
-  std::string filename_, unsigned width_, unsigned height_)
+  const std::string& filename_, unsigned width_, unsigned height_)
   : filename(filename_), img_no(0), width(width_), height(height_)
 {
   adjust_piece();
@@ -77,7 +84,10 @@ void Photomosaics::mosaicify()
     Magick::Image tmp(image);
     std::vector<struct RGB> width_color_map;
     for (unsigned h = 0; h < height; h += piece.height) {
-      tmp.crop(Magick::Geometry(piece.width, piece.height, w, h));
+      if (w > width || h > height)
+        tmp.crop(Magick::Geometry(width - w, height - h, w, h));
+      else
+        tmp.crop(Magick::Geometry(piece.width, piece.height, w, h));
       width_color_map.push_back(calc_avg_color(tmp));
     }
     color_map.push_back(width_color_map);
@@ -202,4 +212,17 @@ void Photomosaics::download_src_img(unsigned w, unsigned h)
   
   for (int i = 0; i < SRC; i++)
     fclose(files[i]);
+}
+
+void Photomosaics::disp_color_map()
+{
+  mosaicify();
+  for (int w = 0; w < BLOCKS; w++) {
+    for (int h = 0; h < BLOCKS; h++) {
+      std::cout << std::setw(3) << color_map[w][h].R << "\n"
+                << std::setw(3) << color_map[w][h].G << "\n"
+                << std::setw(3) << color_map[w][h].B << "\n";
+    }
+    std::cout << "\n";
+  }
 }

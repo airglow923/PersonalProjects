@@ -17,6 +17,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <iomanip>    // setw
 
 #if __GNUC__ >= 8
   #include <filesystem>
@@ -48,11 +49,13 @@ struct RGB {
 class Photomosaics {
 public:
   Photomosaics() = default;
-  Photomosaics(std::string, unsigned, unsigned);
+  Photomosaics(const std::string&);
+  Photomosaics(const std::string&, unsigned, unsigned);
   void load_img(const std::string&);
 	void download_sprt_src_img();
   void clear_sprt_src_img();
   static void download_src_img(unsigned, unsigned);
+  void disp_color_map();
 private:
   void create_src_dir();
   void adjust_piece();
