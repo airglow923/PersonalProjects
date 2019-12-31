@@ -57,6 +57,8 @@ private:
   void adjust_piece();
   static struct RGB calc_avg_color(const Magick::Image&);
   void mosaicify();
+  static double calc_color_difference(
+    const struct RGB&, const struct RGB&);
   std::string filename;
   unsigned img_no;
   unsigned width;

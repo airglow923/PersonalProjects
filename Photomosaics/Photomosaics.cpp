@@ -84,6 +84,17 @@ void Photomosaics::mosaicify()
   }
 }
 
+double Photomosaics::calc_color_difference(
+  const struct RGB& rgb1, const struct RGB& rgb2
+)
+{
+  return sqrt(
+    pow(rgb2.R - rgb1.R, (double) 2) +
+    pow(rgb2.G - rgb1.G, (double) 2) +
+    pow(rgb2.B - rgb1.B, (double) 2)
+  );
+}
+
 static size_t write_data(void* buffer, size_t size, size_t nmemb, void* userp)
 {
   FILE* stream = (FILE*) userp;
