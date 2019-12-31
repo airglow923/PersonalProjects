@@ -32,8 +32,8 @@
 #include "curl/curl.h"
 
 const std::string DIR = "./images/";
-#define SRC 100
-#define BLOCKS 250
+#define SRC     100
+#define BLOCKS  250
 
 struct Piece {
   unsigned width;
@@ -50,7 +50,6 @@ class Photomosaics {
 public:
   Photomosaics() = default;
   Photomosaics(const std::string&);
-  Photomosaics(const std::string&, unsigned, unsigned);
   void load_img(const std::string&);
 	void download_sprt_src_img();
   void clear_sprt_src_img();

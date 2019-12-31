@@ -3,36 +3,26 @@
 unsigned Photomosaics::src = 0;
 
 Photomosaics::Photomosaics(const std::string& filename_)
+  : img_no(0)
 {
   load_img(filename_);
   adjust_piece();
-  create_src_dir();
-}
-
-Photomosaics::Photomosaics(
-  const std::string& filename_, unsigned width_, unsigned height_)
-  : filename(filename_), img_no(0), width(width_), height(height_)
-{
-  adjust_piece();
-  create_src_dir();
 }
 
 void Photomosaics::load_img(const std::string& s)
 {
   Magick::Image image;
-  
   try {
     image.read(s);
+
+    filename = s;
+    width = (size_t) image.baseColumns();
+    height = (size_t) image.baseRows();
+    
+    adjust_piece();
   } catch (std::exception& e) {
     std::cerr << e.what() << "\n";
-    return;
   }
-  
-  filename = s;
-  width = (size_t) image.baseColumns();
-  height = (size_t) image.baseRows();
-  
-  adjust_piece();
 }
 
 void Photomosaics::adjust_piece()
@@ -84,6 +74,7 @@ void Photomosaics::mosaicify()
     Magick::Image tmp(image);
     std::vector<struct RGB> width_color_map;
     for (unsigned h = 0; h < height; h += piece.height) {
+      std::cout << "W: " << piece.width << ", H: " << piece.height << ", Offset W: " << w << ", Offset H: " << h << "\n";
       if (w > width || h > height)
         tmp.crop(Magick::Geometry(width - w, height - h, w, h));
       else
@@ -99,9 +90,9 @@ double Photomosaics::calc_color_difference(
 )
 {
   return sqrt(
-    pow(rgb2.R - rgb1.R, (double) 2) +
-    pow(rgb2.G - rgb1.G, (double) 2) +
-    pow(rgb2.B - rgb1.B, (double) 2)
+    pow(rgb2.R - rgb1.R, 2.0) +
+    pow(rgb2.G - rgb1.G, 2.0) +
+    pow(rgb2.B - rgb1.B, 2.0)
   );
 }
 

@@ -77,9 +77,9 @@ dkms.conf
 .vscode/
 
 # Ignore image files
-*.jpg
-*.jpeg
-*.png
+*.[Jj][Pp][Gg]
+*.[Jj][Pp][Ee][Gg]
+*.[Pp][Nn][Gg]
 
 # Ignore main
 main
