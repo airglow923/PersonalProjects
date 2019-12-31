@@ -1,5 +1,3 @@
-#include "ImageMagick-7/Magick++.h"
-
 #include "Photomosaics.hpp"
 
 int main(int argc, char* argv[])

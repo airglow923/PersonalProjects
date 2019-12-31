@@ -2,7 +2,7 @@ CXX:=g++
 # GCC_VERSION=9.2.0
 # CXX:=$(CXX)-$(GCC_VERSION)
 CXXFLAGS=-std=c++17 -O3 -Wall
-LINKER=-lpthread -lcurl -lstdc++fs
+LINKER=-lpthread -lcurl
 CPPMAGICK=`Magick++-config --cppflags --cxxflags`
 LDMAGICK=`Magick++-config --ldflags --libs`
 

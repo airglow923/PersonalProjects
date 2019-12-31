@@ -26,8 +26,9 @@
   namespace fs = std::experimental::filesystem;
 #endif
 
+#include <Magick++.h>
+
 #include "curl/curl.h"
-#include "ImageMagick-7/Magick++.h"
 
 const std::string DIR = "./images/";
 #define SRC 100
