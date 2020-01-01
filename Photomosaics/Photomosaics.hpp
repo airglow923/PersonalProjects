@@ -18,18 +18,19 @@
 #include <string>
 #include <vector>
 #include <iomanip>    // setw
+#include <array>
 
 #if __GNUC__ >= 8
-  #include <filesystem>
+# include <filesystem>
   namespace fs = std::filesystem;
 #else
-  #include <experimental/filesystem>
+# include <experimental/filesystem>
   namespace fs = std::experimental::filesystem;
 #endif
 
-#include <Magick++.h>
+#include <ImageMagick-7/Magick++.h>
 
-#include "curl/curl.h"
+#include "dw_image.hpp"
 
 const std::string DIR = "./images/";
 #define SRC     100
@@ -51,14 +52,11 @@ public:
   Photomosaics() = default;
   Photomosaics(const std::string&);
   void load_img(const std::string&);
-	void download_sprt_src_img();
-  void clear_sprt_src_img();
-  static void download_src_img(unsigned, unsigned);
   void disp_color_map();
 private:
-  void create_src_dir();
   void adjust_piece();
-  static struct RGB calc_avg_color(const Magick::Image&);
+  static struct RGB calc_avg_color(
+    Magick::Image, unsigned, unsigned, unsigned, unsigned);
   void mosaicify();
   static double calc_color_difference(
     const struct RGB&, const struct RGB&);
@@ -67,7 +65,7 @@ private:
   unsigned width;
   unsigned height;
   struct Piece piece;
-  std::vector<std::vector<struct RGB>> color_map;
+  std::vector<std::array<struct RGB, BLOCKS>> color_map;
   static unsigned src;
 };
 
