@@ -8,9 +8,9 @@
 #include <cmath>    // round
 
 #ifdef _WIN32
-  #include <Windows.h>
+# include <Windows.h>
 #else
-  #include <unistd.h>
+# include <unistd.h>
 #endif
 
 #include <iostream>
@@ -32,7 +32,7 @@
 
 #include "dw_image.hpp"
 
-const std::string DIR = "./images/";
+const std::string DIR = "images";
 #define SRC     100
 #define BLOCKS  250
 
@@ -52,21 +52,32 @@ public:
   Photomosaics() = default;
   Photomosaics(const std::string&);
   void load_img(const std::string&);
+  static void load_src();
   void disp_color_map();
+  void mosaicify(const std::string&);
+
+  struct Piece piece;
 private:
   void adjust_piece();
+
   static struct RGB calc_avg_color(
     Magick::Image, unsigned, unsigned, unsigned, unsigned);
-  void mosaicify();
+  static struct RGB calc_avg_color(const std::string&);
+  
+  void pixellate();
+  void build_block_map();
   static double calc_color_difference(
     const struct RGB&, const struct RGB&);
+
   std::string filename;
   unsigned img_no;
   unsigned width;
   unsigned height;
-  struct Piece piece;
+  
   std::vector<std::array<struct RGB, BLOCKS>> color_map;
-  static unsigned src;
+public:
+  std::vector<std::array<unsigned, BLOCKS>> block_map;
+  static std::array<struct RGB, SRC> src_color_map;
 };
 
 #endif

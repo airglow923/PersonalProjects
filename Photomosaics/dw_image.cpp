@@ -41,7 +41,6 @@ void DWIMG::download_img(
 
   for (int i = 0; i < num; i++) {
     std::string url = "https://picsum.photos/seed/" + std::to_string(range(seed)) + "/" + std::to_string(width) + "/" + std::to_string(height);
-    std::cout << url << "\n";
     files[i] = fopen((path + std::to_string(i) + ".jpg").c_str(), "w");
     add_transfer(multi_handle, url, files[i]);
   }
