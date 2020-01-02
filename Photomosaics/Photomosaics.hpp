@@ -3,9 +3,7 @@
 #ifndef __PHOTOMOSAICS__
 #define __PHOTOMOSAICS__
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>    // round
+#include <cmath>      // round
 
 #ifdef _WIN32
 # include <Windows.h>
@@ -14,10 +12,9 @@
 #endif
 
 #include <iostream>
-#include <random>
 #include <string>
 #include <vector>
-#include <iomanip>    // setw
+#include <iomanip>      // setw
 #include <array>
 
 #if __GNUC__ >= 8
@@ -33,8 +30,8 @@
 #include "dw_image.hpp"
 
 const std::string DIR = "images";
-#define SRC     100
-#define BLOCKS  50
+#define SRC     100     // source images
+#define BLOCKS  50      // number of blocks per side
 
 struct Piece {
   unsigned width;
@@ -74,7 +71,6 @@ private:
   unsigned width;
   unsigned height;
 
-public:
   std::vector<std::array<struct RGB, BLOCKS>> color_map;
   std::vector<std::array<unsigned, BLOCKS>> block_map;
   static std::array<struct RGB, SRC> src_color_map;
