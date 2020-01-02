@@ -21,7 +21,8 @@ void DWIMG::download_img(
   const std::string& path,
   int num,
   unsigned width,
-  unsigned height
+  unsigned height,
+  const std::string& source
 )
 {
   if (!num || !width || !height)
@@ -32,6 +33,7 @@ void DWIMG::download_img(
   std::mt19937 seed(dev());
   std::uniform_int_distribution<std::mt19937::result_type> range;
 
+  // curl variables
   CURLM* multi_handle = curl_multi_init();
   CURLMsg* msg;
   FILE* files[num];
@@ -40,7 +42,7 @@ void DWIMG::download_img(
   int msgs_left = -1;
 
   for (int i = 0; i < num; i++) {
-    std::string url = "https://picsum.photos/seed/" + std::to_string(range(seed)) + "/" + std::to_string(width) + "/" + std::to_string(height);
+    std::string url = source + std::to_string(range(seed)) + "/" + std::to_string(width) + "/" + std::to_string(height);
     files[i] = fopen((path + std::to_string(i) + ".jpg").c_str(), "w");
     add_transfer(multi_handle, url, files[i]);
   }
@@ -67,15 +69,15 @@ void DWIMG::download_img(
 void DWIMG::clear_img(const std::string& path)
 {
   fs::path p(path);
-  fs::remove_all(p);
-  // system(("rm " + fs::current_path().string() + path + "/*").c_str());
+
+  for (const auto& f : fs::directory_iterator(p))
+    fs::remove(f);
 }
 
 void DWIMG::create_dir(const std::string& path)
 {
   fs::path p(path);
-  fs::directory_entry e(p);
-  if (!e.exists())
-    fs::create_directory(e);
-  // system(("bash check_dir.sh " + path).c_str());
+
+  if (!fs::exists(p))
+    fs::create_directory(p);
 }

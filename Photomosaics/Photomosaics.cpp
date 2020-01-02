@@ -6,12 +6,16 @@ Photomosaics::Photomosaics(const std::string& filename_)
   load_img(filename_);
   color_map.reserve(BLOCKS);
   block_map.reserve(BLOCKS);
+
+  std::cout << "Started pixellating the image...\n";
+  pixellate();
+  std::cout << "Finished pixellating the image...\n";
 }
 
 void Photomosaics::adjust_piece()
 {
-  piece.width   = (unsigned) (width / BLOCKS);
-  piece.height  = (unsigned) (height / BLOCKS);
+  piece.width   = (unsigned) round(width / (double) BLOCKS);
+  piece.height  = (unsigned) round(height / (double) BLOCKS);
 }
 
 void Photomosaics::load_img(const std::string& s)
@@ -94,11 +98,9 @@ void Photomosaics::pixellate()
     i = 0;
     for (size_t yOff = 0; yOff < height; yOff += piece.height) {
       unsigned w =
-        (xOff != width && xOff + piece.width > width) ?
-          width - xOff : piece.width;
+        (xOff + piece.width > width) ? width - xOff : piece.width;
       unsigned h =
-        (yOff != height && yOff + piece.height > height) ?
-          height - yOff : piece.height;
+        (yOff + piece.height > height) ? height - yOff : piece.height;
       width_color_map[i++] = calc_avg_color(image, w, h, xOff, yOff);
     }
     color_map.push_back(width_color_map);
@@ -127,25 +129,52 @@ double Photomosaics::calc_color_difference(
 
 void Photomosaics::build_block_map()
 {
-  for (size_t col = 0; col < BLOCKS; col++) {
+  unsigned w = 0;
+  unsigned h = 0;
+  
+  for (const auto& col : color_map) {
+    if (w > width)
+      return;
+
     std::array<unsigned, BLOCKS> positions;
-    int j = 0;
-    for (size_t row = 0; row < BLOCKS; row++) {
+    h = 0;
+    size_t r = 0;
+
+    for (const auto& row : col) {
+      if (h > height)
+        break;
+
       double smallest =
-        calc_color_difference(color_map[col][row], src_color_map[0]);
+        calc_color_difference(row, src_color_map[0]);
       unsigned pos = 0;
-      for (size_t i = 1; i < src_color_map.size(); i++) {
+
+      for (size_t i = 1; i < SRC; i++) {
         double val =
-          calc_color_difference(color_map[col][row], src_color_map[i]);
+          calc_color_difference(row, src_color_map[i]);
+
         if (smallest > val) {
           smallest = val;
           pos = i;
         }
       }
-      positions[j++] = pos;
+
+      positions[r++] = pos;
+      h += piece.height;
     }
     block_map.push_back(positions);
+    w += piece.width;
   }
+}
+
+static std::string generate_filename(const std::string& s, unsigned i = 0)
+{
+  fs::path filename(s);
+
+  return fs::exists(fs::current_path() / filename) ?
+    generate_filename(
+      filename.stem().string() + "_" + std::to_string(i) +
+      filename.extension().string(), i + 1)
+  : s;
 }
 
 void Photomosaics::mosaicify(const std::string& s)
@@ -166,11 +195,9 @@ void Photomosaics::mosaicify(const std::string& s)
   for (size_t xOff = 0, col = 0; xOff < width; xOff += piece.width, col++) {
     for (size_t yOff = 0, row = 0; yOff < height; yOff += piece.height, row++) {
       unsigned w =
-        (xOff != width && xOff + piece.width > width) ?
-          width - xOff : piece.width;
+        (xOff + piece.width > width) ? width - xOff : piece.width;
       unsigned h =
-        (yOff != height && yOff + piece.height > height) ?
-          height - yOff : piece.height;
+        (yOff + piece.height > height) ? height - yOff : piece.height;
       
       Magick::Image src_img;
 
@@ -181,25 +208,12 @@ void Photomosaics::mosaicify(const std::string& s)
         exit(1);
       }
 
-      src_img.scale(Magick::Geometry(w, h));
+      if (src_img.columns() != w || src_img.rows() != h)
+        src_img.crop(Magick::Geometry(w, h, 0, 0));
 
       image.composite(src_img, xOff, yOff);
     }
   }
 
-  image.write(s);
-}
-
-void Photomosaics::disp_color_map()
-{
-  pixellate();
-  std::cout << "Successfully pixellate the input image\n";
-  for (int h = 0; h < 10; h++) {
-    for (int w = 0; w < 10; w++) {
-      std::cout << "(" << std::setw(3) << color_map[w][h].R << " "
-                << std::setw(3) << color_map[w][h].G << " "
-                << std::setw(3) << color_map[w][h].B << ") ";
-    }
-    std::cout << "\n";
-  }
+  image.write(generate_filename(s));
 }

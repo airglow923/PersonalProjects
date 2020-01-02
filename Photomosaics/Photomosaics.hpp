@@ -34,7 +34,7 @@
 
 const std::string DIR = "images";
 #define SRC     100
-#define BLOCKS  250
+#define BLOCKS  50
 
 struct Piece {
   unsigned width;
@@ -51,9 +51,9 @@ class Photomosaics {
 public:
   Photomosaics() = default;
   Photomosaics(const std::string&);
+  
   void load_img(const std::string&);
   static void load_src();
-  void disp_color_map();
   void mosaicify(const std::string&);
 
   struct Piece piece;
@@ -73,9 +73,9 @@ private:
   unsigned img_no;
   unsigned width;
   unsigned height;
-  
-  std::vector<std::array<struct RGB, BLOCKS>> color_map;
+
 public:
+  std::vector<std::array<struct RGB, BLOCKS>> color_map;
   std::vector<std::array<unsigned, BLOCKS>> block_map;
   static std::array<struct RGB, SRC> src_color_map;
 };
