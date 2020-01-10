@@ -32,6 +32,7 @@ void Photomosaics::load_img(const std::string& s)
     adjust_piece();
   } catch (std::exception& e) {
     std::cerr << e.what() << "\n";
+    exit(1);
   }
 }
 
@@ -93,17 +94,21 @@ void Photomosaics::pixellate()
     return;
   }
 
-  for (size_t xOff = 0; xOff < width; xOff += piece.width) {
-    std::array<struct RGB, BLOCKS> width_color_map;
-    i = 0;
-    for (size_t yOff = 0; yOff < height; yOff += piece.height) {
-      unsigned w =
-        (xOff + piece.width > width) ? width - xOff : piece.width;
-      unsigned h =
-        (yOff + piece.height > height) ? height - yOff : piece.height;
-      width_color_map[i++] = calc_avg_color(image, w, h, xOff, yOff);
+  if (fs::exists(fs::current_path() / "input.json")) {
+    Caching::read_input_json(fs::current_path() / "input.json", "webcam.png", color_map);
+  } else {
+    for (size_t xOff = 0; xOff < width; xOff += piece.width) {
+      std::array<struct RGB, BLOCKS> width_color_map;
+      i = 0;
+      for (size_t yOff = 0; yOff < height; yOff += piece.height) {
+        unsigned w =
+          (xOff + piece.width > width) ? width - xOff : piece.width;
+        unsigned h =
+          (yOff + piece.height > height) ? height - yOff : piece.height;
+        width_color_map[i++] = calc_avg_color(image, w, h, xOff, yOff);
+      }
+      color_map.push_back(width_color_map);
     }
-    color_map.push_back(width_color_map);
   }
 }
 
@@ -111,9 +116,13 @@ void Photomosaics::load_src()
 {
   fs::path path(fs::current_path() / DIR);
 
-  for (auto& p : fs::directory_iterator(fs::absolute(path)))
-    if (!p.is_directory() && !p.path().extension().compare(".jpg"))
-      src_color_map[atoi(p.path().stem().c_str())] = calc_avg_color(p.path());
+  if (fs::exists(path / "source.json")) {
+    Caching::read_src_json(path / "source.json", src_color_map);
+  } else {
+    for (auto& p : fs::directory_iterator(path))
+      if (!p.is_directory() && !p.path().extension().compare(".jpg"))
+        src_color_map[atoi(p.path().stem().c_str())] = calc_avg_color(p.path());
+  }
 }
 
 double Photomosaics::calc_color_difference(

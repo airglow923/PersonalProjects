@@ -27,22 +27,9 @@
 
 #include <ImageMagick-7/Magick++.h>
 
+#include "photo_def.hpp"
 #include "dw_image.hpp"
-
-const std::string DIR = "images";
-#define SRC     100     // source images
-#define BLOCKS  50      // number of blocks per side
-
-struct Piece {
-  unsigned width;
-  unsigned height;
-};
-
-struct RGB {
-  unsigned R;
-  unsigned G;
-  unsigned B;
-};
+#include "caching.hpp"
 
 class Photomosaics {
 public:
@@ -52,6 +39,10 @@ public:
   void load_img(const std::string&);
   static void load_src();
   void mosaicify(const std::string&);
+  
+  std::vector<std::array<struct RGB, BLOCKS>>
+  get_input_color_map() const
+  {return color_map;}
 
   struct Piece piece;
 private:
@@ -73,6 +64,7 @@ private:
 
   std::vector<std::array<struct RGB, BLOCKS>> color_map;
   std::vector<std::array<unsigned, BLOCKS>> block_map;
+public:
   static std::array<struct RGB, SRC> src_color_map;
 };
 
