@@ -1,0 +1,24 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -O3 -Wall
+CXX := $(CXX) $(CXXFLAGS)
+LDFLAGS = -lpthread
+LIBS = -lz
+
+main: main.o game.o snake.o apple.o
+	$(CXX) main.o game.o snake.o apple.o $(LDFLAGS) $(LIBS) -o main
+
+main.o: main.cpp
+	$(CXX) -c main.cpp
+
+game.o: game.hpp game.cpp
+	$(CXX) -c game.cpp
+
+snake.o: snake.hpp snake.cpp
+	$(CXX) -c snake.cpp
+
+apple.o: apple.hpp apple.cpp
+	$(CXX) -c apple.cpp
+
+:PHONY: clean
+clean:
+	rm -f *.o main

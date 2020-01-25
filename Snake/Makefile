@@ -1,24 +1,19 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -O3 -Wall
-CXX := $(CXX) $(CXXFLAGS)
-LDFLAGS = -lpthread
-LIBS = -lz
+CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -g
+LIBS = -L/usr/lib/X11
+LDFLAGS = -lpthread -lz -lX11
+DEPS = game_base.hpp game.hpp snake.hpp apple.hpp
+VPATH = ./src
+
+.PHONY: all
+all: main
+
+%.o: %.c $(DEPS)
+	$(CXX) $(LIBS) -c -o $@ $<
 
 main: main.o game.o snake.o apple.o
-	$(CXX) main.o game.o snake.o apple.o $(LDFLAGS) $(LIBS) -o main
+	$(CXX) -o main main.o game.o snake.o apple.o $(LDFLAGS)
 
-main.o: main.cpp
-	$(CXX) -c main.cpp
-
-game.o: game.cpp
-	$(CXX) -c game.cpp
-
-snake.o: snake.cpp
-	$(CXX) -c snake.cpp
-
-apple.o: apple.cpp
-	$(CXX) -c apple.cpp
-
-:PHONY: clean
+.PHONY: clean
 clean:
 	rm -f *.o main
