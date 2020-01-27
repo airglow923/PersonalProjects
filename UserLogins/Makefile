@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -g
-LDFLAGS = -lpthread -lcrypto
+LDFLAGS = -lpthread -lcrypto -lsqlite3
 DEPS = hashing.hpp account.hpp database.hpp
 VPATH = ./src
 
