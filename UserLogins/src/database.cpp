@@ -16,17 +16,6 @@ Database::Database(
 }
 
 bool Database::authenticate(
-    const std::string& username, const std::string& password) const &
-{
-    Account access(username, password);
-
-    for (const auto& account : m_accounts)
-        if (access == account)
-            return true;
-    return false;
-}
-
-bool Database::authenticate(
     const std::string& username,
     const std::string& password,
     const std::string& algorithm) const &
@@ -40,16 +29,20 @@ bool Database::authenticate(
 }
 
 void Database::add_user(
-    const std::string& username, const std::string& password) &
+    const std::string& username,
+    const std::string& password,
+    const std::string& algorithm) &
 {
-    Account account(username, password);
+    Account account(username, password, algorithm);
 
     if (!is_duplicate(account))
         m_accounts.push_back(account);
 }
 
 void Database::assign_admin(
-    const std::string& username, const std::string& password) &
+    const std::string& username,
+    const std::string& password,
+    const std::string& algorithm) &
 {
     std::string auth_user;
     std::string auth_pass;
@@ -60,9 +53,11 @@ void Database::assign_admin(
     std::cin >> auth_pass;
 
     if (m_administrator == Account(auth_user, auth_pass)) {
-        Account account(username, password);
+        Account account(username, password, algorithm);
         if (!is_duplicate(account))
             m_administrator = account;
+    } else {
+        std::cerr << "Access denied.\n";
     }
 }
 
@@ -102,7 +97,7 @@ void Database::save(const std::string& filename) const
 bool Database::is_duplicate(const Account& query)
 {
     for (const auto& account : m_accounts)
-        if (query == account)
+        if (query.get_username() == account.get_username())
             return true;
     return false;
 }

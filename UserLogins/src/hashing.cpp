@@ -5,13 +5,10 @@ static unsigned char sha256_result[SHA256_DIGEST_LENGTH];
 
 std::string Hashing::get_MD5(const std::string& s)
 {
-  MD5((unsigned char*) s.c_str(), s.size(), md5_result);
   char res[MD5_DIGEST_LENGTH * 2 + 1];
 
-  for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
-    std::sprintf(&res[i * 2], "%02X", (unsigned) md5_result[i]);
-
-  res[MD5_DIGEST_LENGTH * 2] = '\0';
+  MD5((unsigned char*) s.c_str(), s.size(), md5_result);
+  stringify(res, MD5_DIGEST_LENGTH, md5_result);
   
   return std::string(res);
 }
@@ -21,11 +18,7 @@ std::string Hashing::get_SHA256(const std::string& s)
   char res[SHA256_DIGEST_LENGTH * 2  + 1];
 
   if (calc_SHA256(s)) {
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
-      std::sprintf(&res[i * 2], "%02X", (unsigned) sha256_result[i]);
-
-    res[SHA256_DIGEST_LENGTH * 2] = '\0';
-
+    stringify(res, SHA256_DIGEST_LENGTH, sha256_result);
     return std::string(res);
   }
 
@@ -46,6 +39,12 @@ bool Hashing::calc_SHA256(const std::string& s)
     return false;
 
   return true;
+}
+
+void Hashing::stringify(char* buf, std::size_t len, unsigned char* input)
+{
+  for (std::size_t i = 0; i < len; i++)
+    std::sprintf(&buf[i * 2], "%02X", (unsigned) input[i]);
 }
 
 unsigned Hashing::F(unsigned x, unsigned y, unsigned z)

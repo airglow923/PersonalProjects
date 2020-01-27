@@ -3,10 +3,12 @@
 #if !defined(Account_header)
 #define Account_header
 
+#include <cstdlib>      // exit
+
 #include <iostream>
 #include <string>
 #include <utility>      // move
-#include <functional>
+#include <functional>   // function
 
 #include "hashing.hpp"
 
@@ -14,12 +16,8 @@ class Account {
 public:
     explicit Account(
         const std::string& username,
-        const std::string& password);
-    explicit Account(
-        const std::string& username,
         const std::string& password,
-        const std::string& algorithm);
-
+        const std::string& algorithm = "SHA256");
 
     std::string get_username() const
     {return m_username;}

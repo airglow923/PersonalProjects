@@ -21,6 +21,7 @@ public:
 
 private:
     static bool calc_SHA256(const std::string&);
+    static void stringify(char*, std::size_t, unsigned char*);
     static unsigned F(unsigned, unsigned, unsigned);
     static unsigned G(unsigned, unsigned, unsigned);
     static unsigned H(unsigned, unsigned, unsigned);

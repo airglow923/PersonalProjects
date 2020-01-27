@@ -4,11 +4,13 @@
 #define Database_header
 
 #include <cstring>
+
 #include <string>
 #include <vector>
 #include <utility>
 #include <fstream>
 #include <iomanip>
+#include <sqlite3.h>
 #include <nlohmann/json.hpp>
 
 #include "account.hpp"
@@ -23,13 +25,18 @@ public:
         const std::string& password,
         const std::string& filename = "config.json");
 
-
     bool authenticate(
-        const std::string&, const std::string&) const &;
-    bool authenticate(
-        const std::string&, const std::string&, const std::string&) const &;
-    void add_user(const std::string&, const std::string&) &;
-    void assign_admin(const std::string&, const std::string&) &;
+        const std::string&,
+        const std::string&,
+        const std::string& = "SHA256") const &;
+    void add_user(
+        const std::string&,
+        const std::string&,
+        const std::string& = "SHA256") &;
+    void assign_admin(
+        const std::string&,
+        const std::string&,
+        const std::string& = "SHA256") &;
     void import(const std::string&);
     void save(const std::string&) const;
 
