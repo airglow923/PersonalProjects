@@ -9,8 +9,10 @@
 #include <iostream>
 #include <string>
 
+#if defined(__linux__) || defined(__CYGWIN__)
 #include <openssl/md5.h>    // MD5
 #include <openssl/sha.h>    // SHA
+#endif
 
 class Hashing {
 public:

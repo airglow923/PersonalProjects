@@ -1,36 +1,24 @@
 #include "database.hpp"
 
 Database::Database()
-    : m_administrator(Account("admin", "admin"))
+    : m_administrator(Account("admin", "admin")), loaded(0)
 {
+    import("config.json");
 }
 
-Database::Database(const std::string& username, const std::string& password)
-    : m_administrator(Account(username, password))
+Database::Database(
+    const std::string& username,
+    const std::string& password,
+    const std::string& filename)
+    : m_administrator(Account(username, password)), loaded(0)
 {
-}
-
-Database::Database(std::string&& username, std::string&& password)
-    : m_administrator(Account(std::move(username), std::move(password)))
-{
+    import(filename);
 }
 
 bool Database::authenticate(
     const std::string& username, const std::string& password) const &
 {
     Account access(username, password);
-
-    for (const auto& account : m_accounts)
-        if (access == account)
-            return true;
-    return false;
-}
-
-bool Database::authenticate(
-    std::string&& username, std::string&& password) const &&
-{
-    Account access(
-        std::move(username), std::move(password));
 
     for (const auto& account : m_accounts)
         if (access == account)
@@ -51,64 +39,70 @@ bool Database::authenticate(
     return false;
 }
 
-bool Database::authenticate(
-    std::string&& username,
-    std::string&& password,
-    std::string&& algorithm) const &&
-{
-    Account access(
-        std::move(username), std::move(password), std::move(algorithm));
-
-    for (const auto& account : m_accounts)
-        if (access == account)
-            return true;
-    return false;
-}
-
 void Database::add_user(
     const std::string& username, const std::string& password) &
 {
-    m_accounts.emplace_back(username, password);
-}
+    Account account(username, password);
 
-void Database::add_user(
-    std::string&& username, std::string&& password) &&
-{
-    m_accounts.emplace_back(std::move(username), std::move(password));
+    if (!is_duplicate(account))
+        m_accounts.push_back(account);
 }
 
 void Database::assign_admin(
     const std::string& username, const std::string& password) &
 {
-    m_administrator = Account(username, password);
-}
+    std::string auth_user;
+    std::string auth_pass;
 
-void Database::assign_admin(
-    std::string&& username, std::string&& password) &&
-{
-    m_administrator = Account(std::move(username), std::move(password));
-}
+    std::cout << "Enter administrator username: ";
+    std::cin >> auth_user;
+    std::cout << "Enter administrator password: ";
+    std::cin >> auth_pass;
 
-void Database::import()
-{
-    import("config.json");
+    if (m_administrator == Account(auth_user, auth_pass)) {
+        Account account(username, password);
+        if (!is_duplicate(account))
+            m_administrator = account;
+    }
 }
 
 void Database::import(const std::string& filename)
 {
+    std::fstream inFile(filename, std::ios_base::in);
 
+    if (inFile.peek() == std::ifstream::traits_type::eof())
+        return;
+
+    std::string content(
+        (std::istreambuf_iterator<char>(inFile)),
+        std::istreambuf_iterator<char>());
+
+    inFile.close();
+
+    json data = json::parse(content.c_str());
+
+    for (const auto& [key, value] : data.items()) {
+        m_accounts.emplace_back(key, value);
+        loaded++;
+    }
 }
 
-void Database::save() const
+void Database::save(const std::string& filename) const
 {
-    save_as("config.json");
-}
+    std::fstream outFile(filename, std::ios_base::out);
+    json data = json::object();
 
-void Database::save_as(const std::string& filename) const
-{
-    std::ofstream outFile(filename);
-    json data;
+    for (const auto& account : m_accounts)
+        data.push_back({account.get_username(), account.get_hashed_pw()});
 
-    outFile << data;
+    outFile << std::setw(4) << data;
     outFile.close();
+}
+
+bool Database::is_duplicate(const Account& query)
+{
+    for (const auto& account : m_accounts)
+        if (query == account)
+            return true;
+    return false;
 }

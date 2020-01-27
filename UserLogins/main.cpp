@@ -9,7 +9,9 @@ int main()
     Database database;
 
     database.add_user("poopity", "scoopity");
+    database.add_user("username", "password");
+    database.add_user("u$ern@me", "p@$$w0rd");
+    database.add_user("sample1", "somepass");
 
-    if (database.authenticate("poopity", "scoopity"))
-        std::cout << "Authenticated\n";
+    database.save("config.json");
 }
