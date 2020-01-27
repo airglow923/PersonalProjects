@@ -12,7 +12,6 @@ int main()
     database.add_user("username", "password");
     database.add_user("u$ern@me", "p@$$w0rd");
     database.add_user("sample1", "somepass");
-    database.assign_admin("new", "admin");
 
     database.save("config.json");
 }

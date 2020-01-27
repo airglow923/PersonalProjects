@@ -1,7 +1,7 @@
 #include "database.hpp"
 
 Database::Database()
-    : m_administrator(Account("admin", "admin")), loaded(0)
+    : m_administrator(Account("admin", "admin"))
 {
     import("config.json");
 }
@@ -10,7 +10,7 @@ Database::Database(
     const std::string& username,
     const std::string& password,
     const std::string& filename)
-    : m_administrator(Account(username, password)), loaded(0)
+    : m_administrator(Account(username, password))
 {
     import(filename);
 }
@@ -65,8 +65,13 @@ void Database::import(const std::string& filename)
 {
     std::fstream inFile(filename, std::ios_base::in);
 
-    if (inFile.peek() == std::ifstream::traits_type::eof())
+    if (!inFile)
         return;
+
+    if (inFile.peek() == std::ifstream::traits_type::eof()) {
+        inFile.close();
+        return;
+    }
 
     std::string content(
         (std::istreambuf_iterator<char>(inFile)),
@@ -77,8 +82,7 @@ void Database::import(const std::string& filename)
     json data = json::parse(content.c_str());
 
     for (const auto& [key, value] : data.items()) {
-        m_accounts.emplace_back(key, value);
-        loaded++;
+        m_accounts.emplace_back(key, value, "PLAIN");
     }
 }
 

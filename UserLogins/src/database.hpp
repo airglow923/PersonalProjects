@@ -45,7 +45,6 @@ private:
 
     Account m_administrator;
     std::vector<Account> m_accounts;
-    std::size_t loaded;
 };
 
 #endif
