@@ -46,12 +46,17 @@ public:
     void save(const std::string&) const;
     int execute_sql(const std::string&);
     void update_db();
+    void add_user_to_db(const Account&);
+    void add_user_to_db(
+        const std::string&, const std::string&, const std::string&);
+    void query_db(const std::string&);
 
 private:
     bool is_duplicate(const Account&);
     void open_db_connection();
     void close_db_connection();
     void create_db();
+    void create_table_inside_db();
 
     static bool startswith(const std::string&, const std::string&);
     static bool endswith(const std::string&, const std::string&);

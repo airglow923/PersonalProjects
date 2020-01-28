@@ -12,6 +12,9 @@
 
 #include "hashing.hpp"
 
+#define USERNAME_LEN    32
+#define HASHED_PW_LEN   64
+
 class Account {
 public:
     explicit Account(

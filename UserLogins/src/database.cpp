@@ -1,9 +1,10 @@
 #include "database.hpp"
 
 Database::Database()
-    : m_administrator(Account("admin", "admin"))
+    : m_administrator(Account("admin", "admin")), m_dbname("accounts.db")
 {
     import("config.json");
+    create_table_inside_db();
 }
 
 Database::Database(
@@ -14,7 +15,7 @@ Database::Database(
     : m_administrator(Account(username, password)), m_dbname(dbname)
 {
     import(filename);
-    create_db();
+    create_table_inside_db();
 }
 
 bool Database::authenticate(
@@ -121,10 +122,33 @@ int Database::execute_sql(const std::string& sql)
         return 1;
     } else {
         std::cout << "Successfully executed SQL statements.\n";
-        return 0;
     }
 
     close_db_connection();
+    return 0;
+}
+
+void Database::update_db()
+{
+
+}
+
+void Database::add_user_to_db(const Account& account)
+{
+
+}
+
+void Database::add_user_to_db(
+    const std::string& username,
+    const std::string& hashed_pw,
+    const std::string& algorithm)
+{
+    add_user_to_db(Account(username, hashed_pw, algorithm));
+}
+
+void Database::query_db(const std::string& sql)
+{
+
 }
 
 bool Database::is_duplicate(const Account& query)
@@ -154,6 +178,20 @@ void Database::close_db_connection()
 void Database::create_db()
 {
     open_db_connection();
+    close_db_connection();
+}
+
+void Database::create_table_inside_db()
+{
+    std::string sql =
+        "CREATE TABLE ACCOUNT(" \
+            "username           VARCHAR(" +
+            std::to_string(USERNAME_LEN) + ") NOT NULL," \
+            "hashed_password    CHAR(" +
+            std::to_string(HASHED_PW_LEN) + ") NOT NULL);";
+
+    open_db_connection();
+    execute_sql(sql);
     close_db_connection();
 }
 
