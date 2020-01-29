@@ -4,7 +4,6 @@ Database::Database()
     : m_administrator(Account("admin", "admin")), m_dbname("account.db")
 {
     import("config.json");
-    create_table_into_db();
 }
 
 Database::Database(
@@ -66,53 +65,78 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 int Database::execute_sql(const std::string& sql)
 {
     char* zErrMsg = 0;
+    int res = sqlite3_exec(m_db, sql.c_str(), callback, 0, &zErrMsg);
 
-    open_db_connection();
-
-    if (sqlite3_exec(m_db, sql.c_str(), callback, 0, &zErrMsg) != SQLITE_OK) {
-        std::fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-        return 1;
-    } else {
-        std::cout << "Successfully executed SQL statements.\n";
+    if (res != SQLITE_OK) {
+        if (zErrMsg) {
+            std::cerr << "SQL error: " << zErrMsg << '\n';
+            sqlite3_free(zErrMsg);
+        }
+        return res;
     }
 
-    close_db_connection();
     return 0;
 }
 
-void Database::update_db()
+int Database::execute_sql(sqlite3* db, const std::string& sql)
 {
+    char* zErrMsg = 0;
+    int res = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
 
+    if (res != SQLITE_OK) {
+        if (zErrMsg) {
+            std::cerr << "SQL error: " << zErrMsg << '\n';
+            sqlite3_free(zErrMsg);
+        }
+        return res;
+    }
+
+    return 0;
 }
 
-void Database::insert_into_db(const Account& account)
+int Database::update_db()
+{
+    return 0;
+}
+
+int Database::insert_into_db(const Account& account)
 {
     std::string sql =
-        "INSERT INTO account" \
+        "INSERT INTO account " \
         "VALUES ('" +
         account.get_username() + "', '" +
         account.get_hashed_pw() + "');";
 
-    execute_sql(sql);
+    return execute_sql(sql);
 }
 
-void Database::query_db(const std::string& sql)
+int Database::insert_into_db(sqlite3* db, const Account& account)
 {
+    std::string sql =
+        "INSERT INTO account " \
+        "VALUES ('" +
+        account.get_username() + "', '" +
+        account.get_hashed_pw() + "');";
 
+    return execute_sql(db, sql);
 }
 
-void Database::display_db()
+int Database::query_db(const std::string& sql)
+{
+    return 0;
+}
+
+int Database::display_db()
 {
     std::string sql =
         "SELECT * FROM account;";
 
-    execute_sql(sql);
+    return execute_sql(sql);
 }
 
-void Database::delete_db()
+int Database::delete_db()
 {
-
+    return 0;
 }
 
 bool Database::is_duplicate(const Account& query)
@@ -123,24 +147,52 @@ bool Database::is_duplicate(const Account& query)
     return false;
 }
 
-void Database::open_db_connection()
+int Database::open_db_connection()
 {
-    if (sqlite3_open(("file:" + m_dbname).c_str(), &m_db) != SQLITE_OK) {
+    int res = sqlite3_open(("file:" + m_dbname).c_str(), &m_db);
+    
+    if (res != SQLITE_OK) {
         std::cerr << "Failed to open database.\n";
-        exit(EXIT_FAILURE);
-    } else {
-        std::cout << "Successfully opened database.\n";
+        return res;
     }
+
+    return SQLITE_OK;
 }
 
-void Database::close_db_connection()
+int Database::open_db_connection(const std::string& dbname, sqlite3* db)
 {
-    if (sqlite3_close(m_db) != SQLITE_OK) {
-        std::cerr << "Failed to close database.\n";
-        exit(EXIT_FAILURE);
-    } else {
-        std::cout << "Successfully closed database.\n";
+    int res = sqlite3_open(("file:" + dbname).c_str(), &db);
+    
+    if (res != SQLITE_OK) {
+        std::cerr << "Failed to open database.\n";
+        return res;
     }
+
+    return SQLITE_OK;
+}
+
+int Database::close_db_connection()
+{
+    int res = sqlite3_close(m_db);
+
+    if (res != SQLITE_OK) {
+        std::cerr << "Failed to close database.\n";
+        return res;
+    }
+    
+    return 0;
+}
+
+int Database::close_db_connection(sqlite3* db)
+{
+    int res = sqlite3_close(db);
+
+    if (res != SQLITE_OK) {
+        std::cerr << "Failed to close database.\n";
+        return res;
+    }
+    
+    return 0;
 }
 
 void Database::create_db()
@@ -153,16 +205,28 @@ void Database::create_db()
     }
 }
 
-void Database::create_table_into_db()
+int Database::create_table_into_db()
 {
     std::string sql =
-        "CREATE TABLE account(" \
+        "CREATE TABLE IF NOT EXISTS account(" \
             "username           VARCHAR(" +
             std::to_string(USERNAME_LEN) + ") NOT NULL," \
             "hashed_password    CHAR(" +
             std::to_string(HASHED_PW_LEN) + ") NOT NULL);";
 
-    execute_sql(sql);
+    return execute_sql(sql);
+}
+
+int Database::create_table_into_db(sqlite3* db, const std::string& table)
+{
+    std::string sql =
+        "CREATE TABLE IF NOT EXISTS " + table + "(" \
+            "username           VARCHAR(" +
+            std::to_string(USERNAME_LEN) + ") NOT NULL," \
+            "hashed_password    CHAR(" +
+            std::to_string(HASHED_PW_LEN) + ") NOT NULL);";
+
+    return execute_sql(db, sql);
 }
 
 bool Database::startswith(const std::string& str, const std::string& prefix)

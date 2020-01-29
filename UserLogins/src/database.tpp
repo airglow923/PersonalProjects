@@ -39,9 +39,3 @@ void Database::assign_admin(Args&&... args) &
         std::cerr << "Access denied.\n";
     }
 }
-
-template<typename... Args>
-void Database::insert_into_db(Args&&... args)
-{
-    insert_into_db(Account(std::forward<Args>(args)...));
-}

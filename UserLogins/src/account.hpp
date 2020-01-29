@@ -21,6 +21,8 @@ public:
         const std::string& username,
         const std::string& password,
         const std::string& algorithm = "SHA256");
+    Account(const Account&);
+    Account(Account&&);
 
     std::string get_username() const
     {return m_username;}

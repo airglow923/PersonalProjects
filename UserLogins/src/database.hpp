@@ -51,27 +51,36 @@ public:
 
     void save(const std::string&) const;
 
+    int open_db_connection();
+    static int open_db_connection(const std::string&, sqlite3*);
+
+    int close_db_connection();
+    static int close_db_connection(sqlite3*);
+
     int execute_sql(const std::string&);
+    static int execute_sql(sqlite3*, const std::string&);
 
-    void update_db();
+    int create_table_into_db();
+    static int create_table_into_db(sqlite3*, const std::string&);
 
-    void insert_into_db(const Account&);
+    int update_db();
+    static int update_db(sqlite3*);
 
-    template<typename... Args>
-    void insert_into_db(Args&&...);
+    int insert_into_db(const Account&);
+    static int insert_into_db(sqlite3*, const Account&);
 
-    void query_db(const std::string&);
+    int query_db(const std::string&);
+    static int query_db(sqlite3*, const std::string&);
 
-    void display_db();
+    int display_db();
+    static int display_db(sqlite3*);
 
-    void delete_db();
+    int delete_db();
+    static int delete_db(sqlite3*);
 
 private:
     bool is_duplicate(const Account&);
-    void open_db_connection();
-    void close_db_connection();
     void create_db();
-    void create_table_into_db();
 
     static bool startswith(const std::string&, const std::string&);
     static bool endswith(const std::string&, const std::string&);

@@ -1,8 +1,14 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -g
-LDFLAGS = -lpthread -lcrypto -lsqlite3 -lstdc++fs
+LDFLAGS = -lpthread -lcrypto -lsqlite3
 DEPS = hashing.hpp account.hpp database.hpp database.tpp
 VPATH = ./src
+
+GCCVERSION := $(shell expr `gcc -dumpversion | cut -f1 -d.` \< 9)
+
+ifeq "$(GCCVERSION)" "1"
+	LDFLAGS += -lstdc++fs
+endif
 
 .PHONY: all
 all: main

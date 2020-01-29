@@ -23,3 +23,16 @@ Account::Account(
     if (!plain)
         m_hashed_pw = m_algorithm(password);
 }
+
+Account::Account(
+    const Account& account)
+    : m_username(account.m_username), m_hashed_pw(account.m_hashed_pw)
+{
+}
+
+Account::Account(
+    Account&& account)
+    : m_username(std::move(account.m_username)),
+        m_hashed_pw(std::move(account.m_hashed_pw))
+{
+}
