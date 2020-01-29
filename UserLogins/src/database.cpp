@@ -1,10 +1,10 @@
 #include "database.hpp"
 
 Database::Database()
-    : m_administrator(Account("admin", "admin")), m_dbname("accounts.db")
+    : m_administrator(Account("admin", "admin")), m_dbname("account.db")
 {
     import("config.json");
-    create_table_inside_db();
+    create_table_into_db();
 }
 
 Database::Database(
@@ -15,53 +15,7 @@ Database::Database(
     : m_administrator(Account(username, password)), m_dbname(dbname)
 {
     import(filename);
-    create_table_inside_db();
-}
-
-bool Database::authenticate(
-    const std::string& username,
-    const std::string& password,
-    const std::string& algorithm) const &
-{
-    Account access(username, password, algorithm);
-
-    for (const auto& account : m_accounts)
-        if (access == account)
-            return true;
-    return false;
-}
-
-void Database::add_user(
-    const std::string& username,
-    const std::string& password,
-    const std::string& algorithm) &
-{
-    Account account(username, password, algorithm);
-
-    if (!is_duplicate(account))
-        m_accounts.push_back(account);
-}
-
-void Database::assign_admin(
-    const std::string& username,
-    const std::string& password,
-    const std::string& algorithm) &
-{
-    std::string auth_user;
-    std::string auth_pass;
-
-    std::cout << "Enter administrator username: ";
-    std::cin >> auth_user;
-    std::cout << "Enter administrator password: ";
-    std::cin >> auth_pass;
-
-    if (m_administrator == Account(auth_user, auth_pass)) {
-        Account account(username, password, algorithm);
-        if (!is_duplicate(account))
-            m_administrator = account;
-    } else {
-        std::cerr << "Access denied.\n";
-    }
+    create_table_into_db();
 }
 
 void Database::import(const std::string& filename)
@@ -84,9 +38,8 @@ void Database::import(const std::string& filename)
 
     json data = json::parse(content.c_str());
 
-    for (const auto& [key, value] : data.items()) {
+    for (const auto& [key, value] : data.items())
         m_accounts.emplace_back(key, value, "PLAIN");
-    }
 }
 
 void Database::save(const std::string& filename) const
@@ -117,7 +70,7 @@ int Database::execute_sql(const std::string& sql)
     open_db_connection();
 
     if (sqlite3_exec(m_db, sql.c_str(), callback, 0, &zErrMsg) != SQLITE_OK) {
-        std::cerr << "Failed to execute SQL statements.\n";
+        std::fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
         return 1;
     } else {
@@ -133,20 +86,31 @@ void Database::update_db()
 
 }
 
-void Database::add_user_to_db(const Account& account)
+void Database::insert_into_db(const Account& account)
 {
+    std::string sql =
+        "INSERT INTO account" \
+        "VALUES ('" +
+        account.get_username() + "', '" +
+        account.get_hashed_pw() + "');";
 
-}
-
-void Database::add_user_to_db(
-    const std::string& username,
-    const std::string& hashed_pw,
-    const std::string& algorithm)
-{
-    add_user_to_db(Account(username, hashed_pw, algorithm));
+    execute_sql(sql);
 }
 
 void Database::query_db(const std::string& sql)
+{
+
+}
+
+void Database::display_db()
+{
+    std::string sql =
+        "SELECT * FROM account;";
+
+    execute_sql(sql);
+}
+
+void Database::delete_db()
 {
 
 }
@@ -164,6 +128,8 @@ void Database::open_db_connection()
     if (sqlite3_open(("file:" + m_dbname).c_str(), &m_db) != SQLITE_OK) {
         std::cerr << "Failed to open database.\n";
         exit(EXIT_FAILURE);
+    } else {
+        std::cout << "Successfully opened database.\n";
     }
 }
 
@@ -172,27 +138,31 @@ void Database::close_db_connection()
     if (sqlite3_close(m_db) != SQLITE_OK) {
         std::cerr << "Failed to close database.\n";
         exit(EXIT_FAILURE);
+    } else {
+        std::cout << "Successfully closed database.\n";
     }
 }
 
 void Database::create_db()
 {
-    open_db_connection();
-    close_db_connection();
+    fs::path p(fs::current_path() / m_dbname);
+
+    if (!fs::exists(p)) {
+        open_db_connection();
+        close_db_connection();
+    }
 }
 
-void Database::create_table_inside_db()
+void Database::create_table_into_db()
 {
     std::string sql =
-        "CREATE TABLE ACCOUNT(" \
+        "CREATE TABLE account(" \
             "username           VARCHAR(" +
             std::to_string(USERNAME_LEN) + ") NOT NULL," \
             "hashed_password    CHAR(" +
             std::to_string(HASHED_PW_LEN) + ") NOT NULL);";
 
-    open_db_connection();
     execute_sql(sql);
-    close_db_connection();
 }
 
 bool Database::startswith(const std::string& str, const std::string& prefix)

@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -g
-LDFLAGS = -lpthread -lcrypto -lsqlite3
-DEPS = hashing.hpp account.hpp database.hpp
+LDFLAGS = -lpthread -lcrypto -lsqlite3 -lstdc++fs
+DEPS = hashing.hpp account.hpp database.hpp database.tpp
 VPATH = ./src
 
 .PHONY: all

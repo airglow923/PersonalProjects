@@ -8,9 +8,18 @@
 
 #include <string>
 #include <vector>
-#include <utility>
+#include <utility>              // forward
 #include <fstream>
-#include <iomanip>
+#include <iomanip>              // setw
+
+#if __GNUC__ >= 8
+    #include <filesystem>
+    namespace fs = std::filesystem;
+#else
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+#endif
+
 #include <sqlite3.h>            // sqlite3_open, sqlite3_close, sqlite3_exec
 #include <nlohmann/json.hpp>    // parse, items, object
 
@@ -27,36 +36,42 @@ public:
         const std::string& = "config.json",
         const std::string& = "account.db");
 
-    bool authenticate(
-        const std::string&,
-        const std::string&,
-        const std::string& = "SHA256") const &;
+    template<typename... Args>
+    bool authenticate(Args&&...) const &;
 
-    void add_user(
-        const std::string&,
-        const std::string&,
-        const std::string& = "SHA256") &;
+    template<typename... Args>
+    void add_user(Args&&...) &;
 
-    void assign_admin(
-        const std::string&,
-        const std::string&,
-        const std::string& = "SHA256") &;
+    template<typename... Args>
+    void assign_admin(Args&&...) &;
+
+    virtual ~Database() {}
 
     void import(const std::string&);
+
     void save(const std::string&) const;
+
     int execute_sql(const std::string&);
+
     void update_db();
-    void add_user_to_db(const Account&);
-    void add_user_to_db(
-        const std::string&, const std::string&, const std::string&);
+
+    void insert_into_db(const Account&);
+
+    template<typename... Args>
+    void insert_into_db(Args&&...);
+
     void query_db(const std::string&);
+
+    void display_db();
+
+    void delete_db();
 
 private:
     bool is_duplicate(const Account&);
     void open_db_connection();
     void close_db_connection();
     void create_db();
-    void create_table_inside_db();
+    void create_table_into_db();
 
     static bool startswith(const std::string&, const std::string&);
     static bool endswith(const std::string&, const std::string&);
@@ -68,5 +83,7 @@ private:
     std::string m_dbname;
     sqlite3* m_db;
 };
+
+#include "database.tpp"     // implementation of template members
 
 #endif
