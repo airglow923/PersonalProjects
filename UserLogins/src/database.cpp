@@ -3,7 +3,7 @@
 Database::Database()
     : m_administrator(Account("admin", "admin")), m_dbname("account.db")
 {
-    import("config.json");
+    import_json("config.json");
 }
 
 Database::Database(
@@ -13,11 +13,11 @@ Database::Database(
     const std::string& dbname)
     : m_administrator(Account(username, password)), m_dbname(dbname)
 {
-    import(filename);
+    import_json(filename);
     create_table_into_db();
 }
 
-void Database::import(const std::string& filename)
+void Database::import_json(const std::string& filename)
 {
     std::fstream inFile(filename, std::ios_base::in);
 
@@ -41,7 +41,7 @@ void Database::import(const std::string& filename)
         m_accounts.emplace_back(key, value, "PLAIN");
 }
 
-void Database::save(const std::string& filename) const
+void Database::export_as_json(const std::string& filename) const
 {
     std::fstream outFile(filename, std::ios_base::out);
     json data = json::object();
@@ -53,19 +53,37 @@ void Database::save(const std::string& filename) const
     outFile.close();
 }
 
-static int callback(void* NotUsed, int argc, char** argv, char** azColName)
+static int print_callback(
+    void* NotUsed, int argc, char** argv, char** colName)
 {
     for (int i = 0; i < argc; i++)
-        std::printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+        std::printf("%s = %s\n", colName[i], argv[i] ? argv[i] : "NULL");
     std::putchar('\n');
 
     return 0;
 }
 
-int Database::execute_sql(const std::string& sql)
+static int retrieve_callback(
+    void* dest, int argc, char** argv, char** colName)
+{
+    Table* table = static_cast<Table*>(dest);
+
+    try {
+        table->emplace_back(argv, argv + argc);
+    } catch (...) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int Database::execute_sql(
+    const std::string& sql,
+    int(*callback)(void*, int, char**, char**),
+    Table* table)
 {
     char* zErrMsg = 0;
-    int res = sqlite3_exec(m_db, sql.c_str(), callback, 0, &zErrMsg);
+    int res = sqlite3_exec(m_db, sql.c_str(), callback, table, &zErrMsg);
 
     if (res != SQLITE_OK) {
         if (zErrMsg) {
@@ -78,10 +96,14 @@ int Database::execute_sql(const std::string& sql)
     return 0;
 }
 
-int Database::execute_sql(sqlite3* db, const std::string& sql)
+int Database::execute_sql(
+    sqlite3* db,
+    const std::string& sql,
+    int(*callback)(void*, int, char**, char**),
+    Table* table)
 {
     char* zErrMsg = 0;
-    int res = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+    int res = sqlite3_exec(db, sql.c_str(), callback, table, &zErrMsg);
 
     if (res != SQLITE_OK) {
         if (zErrMsg) {
@@ -107,7 +129,12 @@ int Database::insert_into_db(const Account& account)
         account.get_username() + "', '" +
         account.get_hashed_pw() + "');";
 
-    return execute_sql(sql);
+    return execute_sql(sql, print_callback);
+}
+
+int Database::insert_into_db(Account&& account)
+{
+    return insert_into_db(static_cast<const Account&>(std::move(account)));
 }
 
 int Database::insert_into_db(sqlite3* db, const Account& account)
@@ -118,12 +145,12 @@ int Database::insert_into_db(sqlite3* db, const Account& account)
         account.get_username() + "', '" +
         account.get_hashed_pw() + "');";
 
-    return execute_sql(db, sql);
+    return execute_sql(db, sql, print_callback);
 }
 
-int Database::query_db(const std::string& sql)
+int Database::insert_into_db(sqlite3* db, Account&& account)
 {
-    return 0;
+    return insert_into_db(db, static_cast<const Account&>(std::move(account)));
 }
 
 int Database::display_db()
@@ -131,7 +158,43 @@ int Database::display_db()
     std::string sql =
         "SELECT * FROM account;";
 
-    return execute_sql(sql);
+    return execute_sql(sql, print_callback);
+}
+
+int Database::display_db(sqlite3* db)
+{
+    std::string sql =
+        "SELECT * FROM account;";
+
+    return execute_sql(db, sql, print_callback);
+}
+
+Table Database::retrieve_db()
+{
+    std::string sql =
+        "SELECT * FROM account;";
+    Table table;
+
+    if (!!execute_sql(sql, retrieve_callback, &table)) {
+        std::cerr << "Failed to retrieve.\n";
+        exit(EXIT_FAILURE);
+    }
+    
+    return table;
+}
+
+Table Database::retrieve_db(sqlite3* db)
+{
+    std::string sql =
+        "SELECT * FROM account;";
+    Table table;
+
+    if (!!execute_sql(db, sql, retrieve_callback, &table)) {
+        std::cerr << "Failed to retrieve.\n";
+        exit(EXIT_FAILURE);
+    }
+    
+    return table;
 }
 
 int Database::delete_db()
@@ -214,7 +277,7 @@ int Database::create_table_into_db()
             "hashed_password    CHAR(" +
             std::to_string(HASHED_PW_LEN) + ") NOT NULL);";
 
-    return execute_sql(sql);
+    return execute_sql(sql, print_callback);
 }
 
 int Database::create_table_into_db(sqlite3* db, const std::string& table)
@@ -226,7 +289,7 @@ int Database::create_table_into_db(sqlite3* db, const std::string& table)
             "hashed_password    CHAR(" +
             std::to_string(HASHED_PW_LEN) + ") NOT NULL);";
 
-    return execute_sql(db, sql);
+    return execute_sql(db, sql, print_callback);
 }
 
 bool Database::startswith(const std::string& str, const std::string& prefix)

@@ -6,11 +6,13 @@
 #include <cstdio>               // printf, putchar
 #include <cstdlib>              // exit
 
+#include <iostream>
 #include <string>
 #include <vector>
-#include <utility>              // forward
+#include <utility>              // move, forward
 #include <fstream>
 #include <iomanip>              // setw
+#include <iterator>             // istreambuf_iterator
 
 #if __GNUC__ >= 8
     #include <filesystem>
@@ -26,6 +28,7 @@
 #include "account.hpp"
 
 using json = nlohmann::json;
+using Table = std::vector<std::vector<std::string>>;
 
 class Database {
 public:
@@ -47,9 +50,9 @@ public:
 
     virtual ~Database() {}
 
-    void import(const std::string&);
+    void import_json(const std::string&);
 
-    void save(const std::string&) const;
+    void export_as_json(const std::string&) const;
 
     int open_db_connection();
     static int open_db_connection(const std::string&, sqlite3*);
@@ -57,8 +60,16 @@ public:
     int close_db_connection();
     static int close_db_connection(sqlite3*);
 
-    int execute_sql(const std::string&);
-    static int execute_sql(sqlite3*, const std::string&);
+    int execute_sql(
+        const std::string&,
+        int(*)(void*, int, char**, char**),
+        Table* = nullptr);
+
+    static int execute_sql(
+        sqlite3*,
+        const std::string&,
+        int(*)(void*, int, char**, char**),
+        Table* = nullptr);
 
     int create_table_into_db();
     static int create_table_into_db(sqlite3*, const std::string&);
@@ -67,18 +78,27 @@ public:
     static int update_db(sqlite3*);
 
     int insert_into_db(const Account&);
-    static int insert_into_db(sqlite3*, const Account&);
+    int insert_into_db(Account&&);
 
-    int query_db(const std::string&);
-    static int query_db(sqlite3*, const std::string&);
+    template<typename... Args>
+    int insert_into_db(Args&&...);
+    
+    static int insert_into_db(sqlite3*, const Account&);
+    static int insert_into_db(sqlite3*, Account&&);
+
+    template<typename... Args>
+    static int insert_into_db(sqlite3*, Args&&...);
 
     int display_db();
     static int display_db(sqlite3*);
 
+    Table retrieve_db();
+    static Table retrieve_db(sqlite3*);
+
     int delete_db();
     static int delete_db(sqlite3*);
 
-private:
+public:
     bool is_duplicate(const Account&);
     void create_db();
 
