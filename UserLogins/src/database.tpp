@@ -51,3 +51,37 @@ int Database::insert_into_db(sqlite3* db, Args&&... args)
 {
     return insert_into_db(db, Account(std::forward<Args>(args)...));
 }
+
+template<typename T, std::size_t N>
+static int update_db(sqlite3* db, const T(&container)[N])
+{
+    for (const auto& elem : container)
+        if (insert_into_db(db, elem) != SQLITE_OK)
+            return 1;
+    return 0;
+}
+
+template<
+    template<typename, std::size_t> class Container,
+    typename T,
+    std::size_t N
+> static int update_db(sqlite3* db, const Container<T, N>& container)
+{
+    for (const auto& elem : container)
+        if (insert_into_db(db, elem) != SQLITE_OK)
+            return 1;
+    return 0;
+}
+
+template<
+    template<typename, typename> class Container,
+    typename T
+> static int update_db(
+    sqlite3* db,
+    const Container<T, std::allocator<T>>& container)
+{
+    for (const auto& elem : container)
+        if (insert_into_db(db, elem) != SQLITE_OK)
+            return 1;
+    return 0;
+}

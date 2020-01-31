@@ -13,6 +13,7 @@
 #include <utility>              // move, forward
 #include <iomanip>              // setw
 #include <iterator>             // istreambuf_iterator
+#include <memory>               // allocator
 
 #if __GNUC__ >= 8
     #include <filesystem>
@@ -76,7 +77,20 @@ public:
     static int create_table_into_db(sqlite3*, const std::string&);
 
     int update_db();
-    static int update_db(sqlite3*);
+
+    template<typename T, std::size_t N>
+    static int update_db(sqlite3*, const T(&)[N]);
+
+    template<
+        template<typename, std::size_t> class Container,
+        typename T,
+        std::size_t N
+    > static int update_db(sqlite3*, const Container<T, N>&);
+
+    template<
+        template<typename, typename> class Container,
+        typename T
+    > static int update_db(sqlite3*, const Container<T, std::allocator<T>>&);
 
     int insert_into_db(const Account&);
     int insert_into_db(Account&&);

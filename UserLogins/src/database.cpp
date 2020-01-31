@@ -95,7 +95,9 @@ static int retrieve_callback(
 
 void Database::import_from_sql()
 {
+    open_db_connection();
     Table table = retrieve_db();
+    close_db_connection();
 
     for (const auto& row : table)
         m_accounts.emplace_back(row[0], row[1], row[2]);
@@ -190,18 +192,17 @@ int Database::execute_sql(
 
 int Database::update_db()
 {
-    return 0;
-}
-
-int Database::update_db(sqlite3* db)
-{
+    for (const auto& account : m_accounts)
+        if (insert_into_db(account) != SQLITE_OK)
+            return 1;
+        
     return 0;
 }
 
 int Database::insert_into_db(const Account& account)
 {
     std::string sql =
-        "INSERT INTO account " \
+        "INSERT OR IGNORE INTO account " \
         "VALUES ('" +
         account.get_username()  + "', '" +
         account.get_hashed_pw() + "', '" +
@@ -218,7 +219,7 @@ int Database::insert_into_db(Account&& account)
 int Database::insert_into_db(sqlite3* db, const Account& account)
 {
     std::string sql =
-        "INSERT INTO account " \
+        "INSERT OR IGNORE INTO account " \
         "VALUES ('" +
         account.get_username()  + "', '" +
         account.get_hashed_pw() + "', '" +
@@ -310,7 +311,7 @@ int Database::create_table_into_db()
     std::string sql =
         "CREATE TABLE IF NOT EXISTS account(" \
             "username           VARCHAR(" +
-            std::to_string(NAME_MAX_LEN) + ") NOT NULL," \
+            std::to_string(NAME_MAX_LEN) + ") NOT NULL PRIMARY KEY," \
             "hashed_password    VARCHAR(" +
             std::to_string(HASH_MAX_LEN) + ") NOT NULL," \
             "algorithm          VARCHAR(" +
@@ -324,7 +325,7 @@ int Database::create_table_into_db(sqlite3* db, const std::string& table)
     std::string sql =
         "CREATE TABLE IF NOT EXISTS " + table + "(" \
             "username           VARCHAR(" +
-            std::to_string(NAME_MAX_LEN) + ") NOT NULL," \
+            std::to_string(NAME_MAX_LEN) + ") NOT NULL PRIMARY KEY," \
             "hashed_password    VARCHAR(" +
             std::to_string(HASH_MAX_LEN) + ") NOT NULL," \
             "algorithm          VARCHAR(" +

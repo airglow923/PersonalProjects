@@ -1,7 +1,6 @@
 #include <cstdio>
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <utility>
 #include <sqlite3.h>
@@ -13,7 +12,13 @@
 int main()
 {
     Database database;
-    std::ofstream outFile("output");
+
+    database.add_user("user1", "hash");
+    database.add_user("user2", "password");
+    database.add_user("user3", "p@$$w0rd");
+    database.add_user("user4", "anon", "MD5");
+    database.add_user("user5", "random");
+    database.add_user("user6", "test", "MD5");
 
     if (!!database.open_db_connection()) {
         std::cerr << "Failed to open.\n";
@@ -22,20 +27,12 @@ int main()
         std::cout << "Successfully opened.\n";
     }
 
-    if (!!database.create_table_into_db()) {
-        std::cerr << "Failed to create.\n";
+    if (!!database.update_db()) {
+        std::cerr << "Failed to update.\n";
         exit(1);
     } else {
-        std::cout << "Successfully created.\n";
+        std::cout << "Successfully updated.\n";
     }
-
-    // 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
-    // if (!!database.insert_into_db("username", "password")) {
-    //     std::cerr << "Failed to insert.\n";
-    //     exit(1);
-    // } else {
-    //     std::cout << "Successfully inserted.\n";
-    // }
 
     Table table = database.retrieve_db();
 
