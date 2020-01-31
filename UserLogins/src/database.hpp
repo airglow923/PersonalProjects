@@ -7,10 +7,10 @@
 #include <cstdlib>              // exit
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <utility>              // move, forward
-#include <fstream>
 #include <iomanip>              // setw
 #include <iterator>             // istreambuf_iterator
 
@@ -36,7 +36,6 @@ public:
     explicit Database(
         const std::string&,
         const std::string&,
-        const std::string& = "config.json",
         const std::string& = "account.db");
 
     template<typename... Args>
@@ -53,6 +52,8 @@ public:
     void import_json(const std::string&);
 
     void export_as_json(const std::string&) const;
+
+    void import_from_sql();
 
     int open_db_connection();
     static int open_db_connection(const std::string&, sqlite3*);
@@ -92,15 +93,15 @@ public:
     int display_db();
     static int display_db(sqlite3*);
 
-    Table retrieve_db();
-    static Table retrieve_db(sqlite3*);
-
     int delete_db();
     static int delete_db(sqlite3*);
 
-public:
+    Table retrieve_db();
+    static Table retrieve_db(sqlite3*);
+
+private:
     bool is_duplicate(const Account&);
-    void create_db();
+    bool db_exists() const;
 
     static bool startswith(const std::string&, const std::string&);
     static bool endswith(const std::string&, const std::string&);

@@ -12,8 +12,9 @@
 
 #include "hashing.hpp"
 
-#define USERNAME_LEN    32
-#define HASHED_PW_LEN   64
+#define NAME_MAX_LEN    32
+#define HASH_MAX_LEN    64
+#define ALGO_MAX_LEN    10
 
 class Account {
 public:
@@ -29,11 +30,14 @@ public:
 
     std::string get_hashed_pw() const
     {return m_hashed_pw;}
+
+    std::string get_algorithm() const
+    {return m_algorithm;}
     
 private:
     std::string m_username;
     std::string m_hashed_pw;
-    std::function<std::string(std::string)> m_algorithm;
+    std::string m_algorithm;
 };
 
 inline bool operator==(const Account& lhs, const Account& rhs)
